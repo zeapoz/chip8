@@ -1,9 +1,15 @@
+use std::time::Duration;
+
 use crate::cpu::Cpu;
 use crate::memory::Memory;
+use crate::display::Display;
+use crate::keyboard::Keyboard;
 
 pub struct Chip8 {
     cpu: Cpu,
     memory: Memory,
+    display: Display,
+    keyboard: Keyboard,
 }
 
 impl Chip8 {
@@ -11,6 +17,8 @@ impl Chip8 {
         Chip8 {
             cpu: Cpu::new(),
             memory: Memory::new(),
+            display: Display::new(),
+            keyboard: Keyboard::new(),
         }
     }
 
@@ -23,6 +31,8 @@ impl Chip8 {
     }
 
     pub fn cycle(&mut self) {
-        self.cpu.execute_instruction(&self.memory);
+        self.display.debug_draw();
+        self.cpu.execute_instruction(&self.memory, &mut self.display, &self.keyboard);
+        std::thread::sleep(Duration::from_millis(50));
     }
 }

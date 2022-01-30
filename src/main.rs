@@ -6,6 +6,8 @@ use chip8::Chip8;
 mod chip8;
 mod cpu;
 mod memory;
+mod display;
+mod keyboard;
 
 fn main() -> std::io::Result<()> {
     // Create new chip8
@@ -20,7 +22,9 @@ fn main() -> std::io::Result<()> {
     // Load data into chip8 ram
     chip8.load_rom(&data);
 
-    chip8.cycle();
+    loop {
+        chip8.cycle();
+    }
 
     Ok(())
 }
