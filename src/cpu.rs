@@ -35,6 +35,20 @@ impl Cpu {
 
         // TODO more match instructions
         match (instruction & 0xF000) >> 12 {
+            0x0 => {
+                match lo {
+                    0xE0 => {
+                        // Clear the display.
+                        display.clear();
+                        self.pc += 2;
+                    },
+                    0xEE => {
+                        // Return from a subroutine.
+                        self.pc = self.stack.pop().unwrap() as usize;
+                    },
+                    _ => panic!("instruction not found in 0x0"),
+                }
+            },
             0x1 => {
                 // Jump to location nnn.
                 self.pc = nnn as usize;
@@ -83,7 +97,11 @@ impl Cpu {
                 let vy = self.read_vx(y) as usize;
                 for y in 0..n {
                     let s = memory.read_byte((self.i + y) as usize);
-                    display.toggle_bytes(s, vx, vy + y as usize);
+                    if display.toggle_bytes(s, vx, vy + y as usize) {
+                        self.write_vx(0xF, 1);
+                    } else {
+                        self.write_vx(0xF, 0);
+                    }
                 } 
                 self.pc += 2;
             },
@@ -106,6 +124,14 @@ impl Cpu {
                     0x1E => {
                         // Set I = I + Vx.
                         self.i += x as u16;
+                        self.pc += 2;
+                    },
+                    0x65 => {
+                        // Read registers V0 through Vx from memory starting at location I.
+                        for i in 0..x + 1 {
+                            let value = memory.read_byte((self.i + i as u16) as usize);
+                            self.write_vx(i, value);
+                        }
                         self.pc += 2;
                     },
                     _ => panic!("instruction not found in 0xF"),

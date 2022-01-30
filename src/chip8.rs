@@ -33,6 +33,6 @@ impl Chip8 {
     pub fn cycle(&mut self) {
         self.display.debug_draw();
         self.cpu.execute_instruction(&self.memory, &mut self.display, &self.keyboard);
-        std::thread::sleep(Duration::from_millis(50));
+        std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
     }
 }
