@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use sdl2::Sdl;
+
 use crate::cpu::Cpu;
 use crate::memory::Memory;
 use crate::display::Display;
@@ -13,11 +15,11 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new() -> Chip8 {
+    pub fn new(sdl_context: &Sdl) -> Chip8 {
         Chip8 {
             cpu: Cpu::new(),
             memory: Memory::new(),
-            display: Display::new(),
+            display: Display::new(sdl_context),
             keyboard: Keyboard::new(),
         }
     }

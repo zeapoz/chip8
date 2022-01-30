@@ -54,10 +54,12 @@ impl Cpu {
                 self.pc = nnn as usize;
             },
             0x2 => {
+                // Call subroutine at nnn.
                 self.stack.push(self.pc as u16);
                 self.pc = nnn as usize;
             },
             0x3 => {
+                // 3xkk - SE Vx, byte
                 if self.v[x as usize] == kk {
                     self.pc += 2;
                 } else {

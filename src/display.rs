@@ -1,15 +1,34 @@
+use sdl2::Sdl;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
+
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
+const SCALE: usize = 10;
 
 pub struct Display {
+    canvas: Canvas<Window>,
     screen: [bool; WIDTH * HEIGHT],
 }
 
 impl Display {
-    pub fn new() -> Display {
+    pub fn new(sdl_context: &Sdl) -> Display {
         Display {
+            canvas: Display::create_window(sdl_context),
             screen: [false; WIDTH * HEIGHT],
         }
+    }
+
+    fn create_window(sdl_context: &Sdl) -> Canvas<Window> {
+        let video_subsystem = sdl_context.video().unwrap();
+
+        let window = video_subsystem.window("Chip8 Emulator", (WIDTH*SCALE) as u32, (HEIGHT*SCALE) as u32)
+            .position_centered()
+            .build()
+            .unwrap();
+
+        let canvas = window.into_canvas().build().unwrap();
+        canvas
     }
 
     pub fn clear(&mut self) {

@@ -8,6 +8,6 @@ impl Keyboard {
     }
 
     pub fn is_pressed(&self, key: u8) -> bool {
-        true
+        false
     }
 }

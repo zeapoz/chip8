@@ -1,6 +1,8 @@
 use std::fs::File;
 use std::io::Read;
 
+use sdl2;
+
 use chip8::Chip8;
 
 mod chip8;
@@ -10,8 +12,11 @@ mod display;
 mod keyboard;
 
 fn main() -> std::io::Result<()> {
+    // Setup sdl context
+    let sdl_context = sdl2::init().unwrap();
+
     // Create new chip8
-    let mut chip8 = Chip8::new();
+    let mut chip8 = Chip8::new(&sdl_context);
     // Load and store rom
     let rom_path = "test/space_invaders.ch8";
 
