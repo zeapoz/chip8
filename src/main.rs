@@ -4,6 +4,7 @@ use std::io::Read;
 use chip8::Chip8;
 
 mod chip8;
+mod cpu;
 mod memory;
 
 fn main() -> std::io::Result<()> {
@@ -18,6 +19,8 @@ fn main() -> std::io::Result<()> {
     file.read_to_end(&mut data)?;
     // Load data into chip8 ram
     chip8.load_rom(&data);
+
+    chip8.cycle();
 
     Ok(())
 }
