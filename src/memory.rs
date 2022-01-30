@@ -1,5 +1,5 @@
 pub struct Memory {
-    ram: [u8; 4096],
+    pub ram: [u8; 4096],
 }
 
 impl Memory {
@@ -14,6 +14,14 @@ impl Memory {
             i += 1;
         }
         memory
+    }
+
+    pub fn read_byte(&self, address: usize) -> u8 {
+        self.ram[address]
+    }
+
+    pub fn write_byte(&mut self, address: usize, value: u8) {
+        self.ram[address] = value;
     }
 }
 
