@@ -42,7 +42,7 @@ impl Display {
             for x in 0..WIDTH {
                 let i = Display::get_index(x, y);
                 if self.screen[i] {
-                    self.canvas.set_draw_color(Color::RGB(255, 255, 255));
+                    self.canvas.set_draw_color(Color::RGB(164, 64, 164));
                     // Draw rect at position multiplied by scale
                     self.canvas.fill_rect(Rect::new(
                         (x as i32)*SCALE as i32,
@@ -70,7 +70,7 @@ impl Display {
 
             let bit = (byte & 0b1000_0000) >> 7;
             let prev = self.screen[i];
-            self.screen[i] = bit != 0;
+            self.screen[i] ^= bit != 0;
 
             if prev && !self.screen[i] {
                 erased = true;

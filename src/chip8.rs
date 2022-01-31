@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use sdl2::Sdl;
 
@@ -33,16 +33,22 @@ impl Chip8 {
     }
 
     pub fn cycle(&mut self) {
+        let cpu_clock = Duration::from_millis(2);
+        let mut last_cpu_time = Instant::now();
+        
         loop {
-            if self.keyboard.check_quit() {
+            // Poll for keypresses, break if returned false
+            if !self.keyboard.key_handler() {
                 break;
             }
-            self.display.draw();
-            self.keyboard.key_handler();
             // self.display.debug_draw();
-            self.cpu.cycle(&mut self.memory, &mut self.display, &mut self.keyboard);
-            // Sleep for a duration equivalent to a refresh rate of 300hz
-            std::thread::sleep(Duration::new(0, 1_000_000_000 / 300));
+            self.display.draw();
+
+            // Keep cpu instructions seperate from input and draw clock
+            if Instant::now() - last_cpu_time > cpu_clock {
+                self.cpu.cycle(&mut self.memory, &mut self.display, &mut self.keyboard);
+                last_cpu_time = Instant::now();
+            }
         }
     }
 }

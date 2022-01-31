@@ -141,6 +141,8 @@ impl Cpu {
                         self.write_vx(x, sum as u8);
                         if sum > 0xFF {
                             self.write_vx(0xF, 1);
+                        } else {
+                            self.write_vx(0xF, 0);
                         }
                         self.pc += 2;
                     },
@@ -149,7 +151,7 @@ impl Cpu {
                         let vx = self.read_vx(x);
                         let vy = self.read_vx(y);
 
-                        if vx > vy {
+                        if vx >= vy {
                             self.write_vx(0xF, 1);
                         } else {
                             self.write_vx(0xF, 0);
@@ -169,12 +171,12 @@ impl Cpu {
                         let vx = self.read_vx(x);
                         let vy = self.read_vx(y);
                         
-                        if vy > vx {
+                        if vy >= vx {
                             self.write_vx(0xF, 1);
                         } else {
                             self.write_vx(0xF, 0);
                         }
-                        self.write_vx(y, vy.wrapping_sub(vx));
+                        self.write_vx(x, vy.wrapping_sub(vx));
                         self.pc += 2;
                     },
                     0xE => {
@@ -283,7 +285,7 @@ impl Cpu {
                     },
                     0x29 => {
                         // Set I = location of sprite for digit Vx.
-                        self.i = self.read_vx(x) as u16;
+                        self.i = self.read_vx(x) as u16 * 5;
                         self.pc += 2;
                     },
                     0x33 => {
@@ -301,6 +303,7 @@ impl Cpu {
                             let vx = self.read_vx(i);
                             memory.write_byte((self.i + i as u16) as usize, vx);
                         }
+                        self.i += x as u16 + 1;
                         self.pc += 2;
                     },
                     0x65 => {
@@ -309,6 +312,7 @@ impl Cpu {
                             let value = memory.read_byte((self.i + i as u16) as usize);
                             self.write_vx(i, value);
                         }
+                        self.i += x as u16 + 1;
                         self.pc += 2;
                     },
                     _ => panic!("instruction not found in 0xF"),

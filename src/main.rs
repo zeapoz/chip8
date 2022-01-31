@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Read;
+use std::env;
 
 use sdl2;
 
@@ -12,16 +13,21 @@ mod display;
 mod keyboard;
 
 fn main() -> std::io::Result<()> {
+    // Collect arguments
+    let rom_path: &str;
+
+    let args: Vec<String> = env::args().collect();
+    match args.len() {
+        2 => rom_path = &args[1],
+        _ => panic!("arguments should only be 1"),
+    }
     // Setup sdl context
     let sdl_context = sdl2::init().unwrap();
-
     // Create new chip8
     let mut chip8 = Chip8::new(&sdl_context);
-    // Load and store rom
-    let rom_path = "test/space_invaders.ch8";
-
-    let mut file = File::open(rom_path)?;
+    
     let mut data: Vec<u8> = Vec::new();
+    let mut file = File::open(rom_path)?;
 
     file.read_to_end(&mut data)?;
     // Load data into chip8 ram

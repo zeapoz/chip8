@@ -1,4 +1,3 @@
-use sdl2::Sdl;
 use sdl2::EventPump;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -32,30 +31,29 @@ impl Keyboard {
         false
     }
 
-    pub fn key_handler(&mut self) {
+    pub fn key_handler(&mut self) -> bool {
         for event in self.event_pump.poll_iter() {
             match event {
+                Event::Quit {..} |
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    return false;
+                },
                 Event::KeyDown { keycode: Some(key), .. } => {
                     if let Some(byte_key) = Keyboard::map_keycode(key) {
                         self.held = Some(byte_key);
                     }
                 },
-                _ => {}
-            }
-        }
-    }
-
-    pub fn check_quit(&mut self) -> bool {
-        for event in self.event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    return true;
+                Event::KeyUp { keycode: Some(key), .. } => {
+                    if let Some(byte_key) = Keyboard::map_keycode(key) {
+                        if self.held == Some(byte_key) {
+                            self.held = None;
+                        }
+                    }
                 },
                 _ => {}
             }
         }
-        false
+        true
     }
 
     fn map_keycode(key: Keycode) -> Option<u8> {
