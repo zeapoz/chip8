@@ -39,7 +39,7 @@ impl Chip8 {
             }
             self.display.draw();
             // self.display.debug_draw();
-            self.cpu.execute_instruction(&self.memory, &mut self.display, &mut self.keyboard);
+            self.cpu.cycle(&mut self.memory, &mut self.display, &mut self.keyboard);
             std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
         }
     }
