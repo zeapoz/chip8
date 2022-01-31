@@ -20,7 +20,7 @@ impl Chip8 {
             cpu: Cpu::new(),
             memory: Memory::new(),
             display: Display::new(sdl_context),
-            keyboard: Keyboard::new(),
+            keyboard: Keyboard::new(sdl_context),
         }
     }
 
@@ -33,8 +33,14 @@ impl Chip8 {
     }
 
     pub fn cycle(&mut self) {
-        self.display.debug_draw();
-        self.cpu.execute_instruction(&self.memory, &mut self.display, &self.keyboard);
-        std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
+        loop {
+            if self.keyboard.check_quit() {
+                break;
+            }
+            self.display.draw();
+            // self.display.debug_draw();
+            self.cpu.execute_instruction(&self.memory, &mut self.display, &mut self.keyboard);
+            std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
+        }
     }
 }

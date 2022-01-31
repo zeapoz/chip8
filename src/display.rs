@@ -1,6 +1,7 @@
 use sdl2::Sdl;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
+use sdl2::pixels::Color;
 
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
@@ -29,6 +30,12 @@ impl Display {
 
         let canvas = window.into_canvas().build().unwrap();
         canvas
+    }
+
+    pub fn draw(&mut self) {
+        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+        self.canvas.clear();
+        self.canvas.present();
     }
 
     pub fn clear(&mut self) {

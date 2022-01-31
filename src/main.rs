@@ -26,10 +26,8 @@ fn main() -> std::io::Result<()> {
     file.read_to_end(&mut data)?;
     // Load data into chip8 ram
     chip8.load_rom(&data);
-
-    loop {
-        chip8.cycle();
-    }
+    // Enter loop
+    chip8.cycle();
 
     Ok(())
 }

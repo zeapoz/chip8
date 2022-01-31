@@ -19,7 +19,7 @@ impl Cpu {
         }
     }
 
-    pub fn execute_instruction(&mut self, memory: &Memory, display: &mut Display, keyboard: &Keyboard) {
+    pub fn execute_instruction(&mut self, memory: &Memory, display: &mut Display, keyboard: &mut Keyboard) {
         let hi = memory.read_byte(self.pc);
         let lo = memory.read_byte(self.pc + 1);
         let instruction: u16 = (hi as u16) << 8 | (lo as u16);
