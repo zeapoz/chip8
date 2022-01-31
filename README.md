@@ -1,4 +1,4 @@
-# chip8
+# CHIP-8 Emulator in Rust
 A functional [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator written in Rust with SDL.
 
 # Instructions
