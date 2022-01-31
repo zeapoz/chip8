@@ -27,7 +27,7 @@ impl Cpu {
 
     pub fn cycle(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard) {
         self.execute_instruction(memory, display, keyboard);
-        self.decrement_timer();
+        self.decrement_timers();
     }
 
     fn execute_instruction(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard) {
@@ -35,14 +35,14 @@ impl Cpu {
         let lo = memory.read_byte(self.pc + 1);
         let instruction: u16 = (hi as u16) << 8 | (lo as u16);
         
-        println!("\nRead instruction: 0x{:X} from hi: 0x{:X} and lo: 0x{:X}", instruction, hi, lo);
+        // println!("\nRead instruction: 0x{:X} from hi: 0x{:X} and lo: 0x{:X}", instruction, hi, lo);
 
         let nnn = instruction & 0xFFF;
         let n = instruction & 0xF;
         let x = hi & 0xF;
         let y = (lo & 0xF0) >> 4;
         let kk = lo;
-        println!("nnn: 0x{:X}, n: 0x{:X}, x: 0x{:X}, y: 0x{:X}", nnn, n, x, y);
+        // println!("nnn: 0x{:X}, n: 0x{:X}, x: 0x{:X}, y: 0x{:X}", nnn, n, x, y);
 
         // TODO more match instructions
         match (instruction & 0xF000) >> 12 {
@@ -72,17 +72,25 @@ impl Cpu {
             0x3 => {
                 // Skip next instruction if Vx = kk
                 if self.read_vx(x) == kk {
-                    self.pc += 2;
-                } else {
                     self.pc += 4;
+                } else {
+                    self.pc += 2;
                 }
             },
             0x4 => {
                 // Skip next instruction if Vx != kk
                 if self.read_vx(x) != kk {
-                    self.pc += 2;
-                } else {
                     self.pc += 4;
+                } else {
+                    self.pc += 2;
+                }
+            },
+            0x5 => {
+                // Skip next instruction if Vx = Vy.
+                if self.read_vx(x) == self.read_vx(y) {
+                    self.pc += 4;
+                } else {
+                    self.pc += 2;
                 }
             },
             0x6 => {
@@ -102,6 +110,13 @@ impl Cpu {
                         // Set Vx = Vy.
                         let vy = self.read_vx(y);
                         self.write_vx(x, vy);
+                        self.pc += 2;
+                    },
+                    0x1 => {
+                        // Set Vx = Vx OR Vy.
+                        let vx = self.read_vx(x);
+                        let vy = self.read_vx(y);
+                        self.write_vx(x, vx | vy);
                         self.pc += 2;
                     },
                     0x2 => {
@@ -146,10 +161,41 @@ impl Cpu {
                         // Set Vx = Vx SHR 1.
                         let vx = self.read_vx(x);
                         self.write_vx(0xF, vx & 0x1);
-                        self.write_vx(x, vx / 1);
+                        self.write_vx(x, vx >> 1);
+                        self.pc += 2;
+                    },
+                    0x7 => {
+                        // Set Vx = Vy - Vx, set VF = NOT borrow.
+                        let vx = self.read_vx(x);
+                        let vy = self.read_vx(y);
+                        
+                        if vy > vx {
+                            self.write_vx(0xF, 1);
+                        } else {
+                            self.write_vx(0xF, 0);
+                        }
+                        self.write_vx(y, vy.wrapping_sub(vx));
+                        self.pc += 2;
+                    },
+                    0xE => {
+                        // Set Vx = Vx SHL 1.
+                        let vx = self.read_vx(x);
+                        self.write_vx(0xF, (vx & 0x80) >> 7);
+                        self.write_vx(x, vx << 1);
                         self.pc += 2;
                     },
                     _ => panic!("instruction not found in 0x8"),
+                }
+            },
+            0x9 => {
+                // Skip next instruction if Vx != Vy.
+                let vx = self.read_vx(x);
+                let vy = self.read_vx(y);
+
+                if vx != vy {
+                    self.pc += 4;
+                } else {
+                    self.pc += 2;
                 }
             },
             0xA => {
@@ -157,8 +203,13 @@ impl Cpu {
                 self.i = nnn;
                 self.pc += 2;
             },
+            0xB => {
+                // Jump to location nnn + V0.
+                let vx = self.read_vx(x) as u16;
+                self.pc = (nnn + vx) as usize;
+            },
             0xC => {
-                // Set Vx = random byte AND kk.// Set I = nnn.
+                // Set Vx = random byte AND kk.
                 let mut rng = rand::thread_rng();
                 let r = rng.gen_range(0..255);
                 self.write_vx(x, r & kk);
@@ -184,18 +235,18 @@ impl Cpu {
                         // Skip next instruction if key with the value of Vx is pressed.
                         let key = self.read_vx(x);
                         if keyboard.is_pressed(key) {
-                            self.pc += 2;
-                        } else {
                             self.pc += 4;
+                        } else {
+                            self.pc += 2;
                         }
                     },
                     0xA1 => {
                         // Skip next instruction if key with the value of Vx is not pressed.
                         let key = self.read_vx(x);
                         if !keyboard.is_pressed(key) {
-                            self.pc += 2;
-                        } else {
                             self.pc += 4;
+                        } else {
+                            self.pc += 2;
                         }
                     },
                     _ => panic!("instruction not found in 0xF"),
@@ -207,6 +258,13 @@ impl Cpu {
                         // Set Vx = delay timer value.
                         self.write_vx(x, self.delay_timer);
                         self.pc += 2;
+                    },
+                    0x0A => {
+                        // Wait for a key press, store the value of the key in Vx.
+                        if let Some(key) = keyboard.wait_for_press() {
+                            self.write_vx(x, key);
+                            self.pc += 2;
+                        }
                     },
                     0x15 => {
                         // Set delay timer = Vx.
@@ -220,7 +278,7 @@ impl Cpu {
                     },
                     0x1E => {
                         // Set I = I + Vx.
-                        self.i += x as u16;
+                        self.i += self.read_vx(x) as u16;
                         self.pc += 2;
                     },
                     0x29 => {
@@ -235,6 +293,14 @@ impl Cpu {
                         memory.write_byte(i, value / 100);
                         memory.write_byte(i + 1, (value % 100) / 10);
                         memory.write_byte(i + 2, value % 10);
+                        self.pc += 2;
+                    },
+                    0x55 => {
+                        // Store registers V0 through Vx in memory starting at location I.
+                        for i in 0..x + 1 {
+                            let vx = self.read_vx(i);
+                            memory.write_byte((self.i + i as u16) as usize, vx);
+                        }
                         self.pc += 2;
                     },
                     0x65 => {
@@ -260,9 +326,12 @@ impl Cpu {
         self.v[x as usize] = value;
     }
 
-    fn decrement_timer(&mut self) {
+    fn decrement_timers(&mut self) {
         if self.delay_timer > 0 {
             self.delay_timer -= 1;
+        }
+        if self.sound_timer > 0 {
+            self.sound_timer -= 1;
         }
     }
 }

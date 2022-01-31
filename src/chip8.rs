@@ -38,9 +38,11 @@ impl Chip8 {
                 break;
             }
             self.display.draw();
+            self.keyboard.key_handler();
             // self.display.debug_draw();
             self.cpu.cycle(&mut self.memory, &mut self.display, &mut self.keyboard);
-            std::thread::sleep(Duration::new(0, 1_000_000_000 / 60));
+            // Sleep for a duration equivalent to a refresh rate of 300hz
+            std::thread::sleep(Duration::new(0, 1_000_000_000 / 300));
         }
     }
 }

@@ -49,7 +49,6 @@ impl Display {
                         (y as i32)*SCALE as i32,
                         SCALE, SCALE
                     )).unwrap();
-                } else {
                 }
             }
         }
