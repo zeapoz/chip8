@@ -11,6 +11,7 @@ const SCALE: u32 = 10;
 pub struct Display {
     canvas: Canvas<Window>,
     screen: [bool; WIDTH * HEIGHT],
+    needs_draw: bool,
 }
 
 impl Display {
@@ -18,6 +19,7 @@ impl Display {
         Display {
             canvas: Display::create_window(sdl_context),
             screen: [false; WIDTH * HEIGHT],
+            needs_draw: true,
         }
     }
 
@@ -34,6 +36,10 @@ impl Display {
     }
 
     pub fn draw(&mut self) {
+        // Only draw if cpu has executed
+        if !self.needs_draw {
+            return
+        }
         // Clear screen
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.canvas.clear();
@@ -53,6 +59,7 @@ impl Display {
             }
         }
         self.canvas.present();
+        self.set_needs_draw(false);
     }
 
     pub fn clear(&mut self) {
@@ -78,6 +85,10 @@ impl Display {
             byte <<= 1;
         }
         erased
+    }
+
+    pub fn set_needs_draw(&mut self, value: bool) {
+        self.needs_draw = value;
     }
 
     fn get_index(x: usize, y: usize) -> usize {

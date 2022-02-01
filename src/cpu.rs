@@ -27,7 +27,7 @@ impl Cpu {
 
     pub fn cycle(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard) {
         self.execute_instruction(memory, display, keyboard);
-        self.decrement_timers();
+        // self.decrement_timers();
     }
 
     fn execute_instruction(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard) {
@@ -230,6 +230,8 @@ impl Cpu {
                     }
                 } 
                 self.pc += 2;
+                // Let display know the need to update screen
+                display.set_needs_draw(true);
             },
             0xE => {
                 match lo {
@@ -330,7 +332,7 @@ impl Cpu {
         self.v[x as usize] = value;
     }
 
-    fn decrement_timers(&mut self) {
+    pub fn decrement_timers(&mut self) {
         if self.delay_timer > 0 {
             self.delay_timer -= 1;
         }

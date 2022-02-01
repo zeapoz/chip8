@@ -32,23 +32,26 @@ impl Chip8 {
         }
     }
 
-    pub fn cycle(&mut self) {
-        let cpu_clock = Duration::from_millis(2);
-        let mut last_cpu_time = Instant::now();
-        
+    pub fn cycle(&mut self) {        
         loop {
             // Poll for keypresses, break if returned false
             if !self.keyboard.key_handler() {
                 break;
             }
+            // Store time to sync variable cpu execution time
+            let now = Instant::now();
+            // Execute 8 cpu instructions per 60hz cycle to match a 480hz clock
+            for _ in 0..8 {
+                // Run cpu instructions
+                self.cpu.cycle(&mut self.memory, &mut self.display, &mut self.keyboard);
+            }
+            // Decrement timers
+            self.cpu.decrement_timers();
             // self.display.debug_draw();
             self.display.draw();
-
-            // Keep cpu instructions seperate from input and draw clock
-            if Instant::now() - last_cpu_time > cpu_clock {
-                self.cpu.cycle(&mut self.memory, &mut self.display, &mut self.keyboard);
-                last_cpu_time = Instant::now();
-            }
+            // Subtract elapsed time from 60hz and sleep for that duration
+            let sleep_time = Duration::from_micros(16_667) - now.elapsed();
+            std::thread::sleep(sleep_time);
         }
     }
 }
