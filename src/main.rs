@@ -11,6 +11,7 @@ mod cpu;
 mod memory;
 mod display;
 mod keyboard;
+mod audio;
 
 fn main() -> std::io::Result<()> {
     // Collect arguments

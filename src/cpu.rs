@@ -3,6 +3,7 @@ use rand::Rng;
 use crate::memory::Memory;
 use crate::display::Display;
 use crate::keyboard::Keyboard;
+use crate::audio::Device;
 
 pub struct Cpu {
     v: [u8; 16],
@@ -25,12 +26,7 @@ impl Cpu {
         }
     }
 
-    pub fn cycle(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard) {
-        self.execute_instruction(memory, display, keyboard);
-        // self.decrement_timers();
-    }
-
-    fn execute_instruction(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard) {
+    pub fn execute_instruction(&mut self, memory: &mut Memory, display: &mut Display, keyboard: &mut Keyboard, audio_device: &mut Device) {
         let hi = memory.read_byte(self.pc);
         let lo = memory.read_byte(self.pc + 1);
         let instruction: u16 = (hi as u16) << 8 | (lo as u16);
@@ -277,7 +273,8 @@ impl Cpu {
                     },
                     0x18 => {
                         // Set sound timer = Vx.
-                        self.sound_timer = self.read_vx(x);
+                        let v = self.read_vx(x);
+                        self.set_sound_timer(&audio_device, v);
                         self.pc += 2;
                     },
                     0x1E => {
@@ -332,12 +329,19 @@ impl Cpu {
         self.v[x as usize] = value;
     }
 
-    pub fn decrement_timers(&mut self) {
+    fn set_sound_timer(&mut self, audio_device: &Device, value: u8) {
+        self.sound_timer = value;
+        audio_device.play();
+    }
+
+    pub fn decrement_timers(&mut self, audio_device: &Device) {
         if self.delay_timer > 0 {
             self.delay_timer -= 1;
         }
         if self.sound_timer > 0 {
             self.sound_timer -= 1;
+        } else {
+            audio_device.stop();
         }
     }
 }
